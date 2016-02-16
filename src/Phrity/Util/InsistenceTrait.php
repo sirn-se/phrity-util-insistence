@@ -4,8 +4,14 @@ namespace Phrity\Util;
 
 trait InsistenceTrait
 {
-    protected function insist($data)
+
+    private $insistance;
+
+    protected function insist($schema, $data)
     {
-        return new Insistence($data);
+        if (!isset($this->insistance)) {
+            $this->insistance = new Insistence();
+        }
+        $this->insistance->setSchema($schema)->insist($data);
     }
 }

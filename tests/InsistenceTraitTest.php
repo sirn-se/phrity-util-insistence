@@ -10,27 +10,27 @@ class InsistenceTraitTest extends \PHPUnit_Framework_TestCase
     public function testInsist()
     {
         $mock = new InsistenceTraitImplementation();
-        $mock->testInsist(1, 'integer', ['type' => 'integer']);
-        $mock->testInsist('A string', 'string', ['type' => 'string']);
+        $mock->testInsist(['internalType' => 'integer'], 12);
+        $mock->testInsist(['internalType' => 'string'], 'A string');
     }
 
     /**
      * @expectedException InvalidArgumentException
-     * @expectedExceptionMessage Expected string but got integer
+     * @expectedExceptionMessage string value found, but integer is required
      */
-    public function testFailedType()
+    public function testFailedInternalType()
     {
         $mock = new InsistenceTraitImplementation();
-        $mock->testInsist(1, 'string', ['type' => 'integer']);
+        $mock->testInsist(['internalType' => 'integer'], 'A string');
     }
 
     /**
      * @expectedException InvalidArgumentException
-     * @expectedExceptionMessage Must have a minimum value of 10
+     * @expectedExceptionMessage stdClass required to be an instance of InvalidClass
      */
-    public function testFailedSchema()
+    public function testFailedInstanceOf()
     {
         $mock = new InsistenceTraitImplementation();
-        $mock->testInsist(1, 'integer', ['minimum' => 10]);
+        $mock->testInsist(['instanceOf' => 'InvalidClass'], new \stdClass);
     }
 }

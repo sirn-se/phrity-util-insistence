@@ -8,8 +8,8 @@ class InsistenceTraitImplementation
 {
     use InsistenceTrait;
 
-    public function testInsist($data, $types, $schema)
+    public function testInsist($schema, $data)
     {
-        $this->insist($data)->isType($types)->bySchema($schema);
+        $this->insist($schema, $data);
     }
 }

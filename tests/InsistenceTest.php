@@ -9,95 +9,128 @@ class InsistenceTest extends \PHPUnit_Framework_TestCase
 
     public function testBoolean()
     {
-        $insistence = new Insistence(true);
-        $insistence->isType('boolean')->isType('scalar')->isType(['boolean', 'string']);
-        $insistence->bySchema(['type' => 'boolean']);
+        $in = new Insistence();
+        $in->setSchema(['internalType' => 'boolean'])->insist(true);
+        $in->setSchema(['internalType' => 'scalar'])->insist(true);
+        $in->setSchema(['internalType' => ['string', 'boolean']])->insist(true);
     }
 
     public function testInteger()
     {
-        $insistence = new Insistence(1234);
-        $insistence->isType('integer')->isType('scalar')->isType(['numeric', 'string']);
-        $insistence->bySchema(['type' => 'integer', 'min' => 1000, 'max' => 1300]);
+        $in = new Insistence();
+        $in->setSchema(['internalType' => 'integer'])->insist(1234);
+        $in->setSchema(['internalType' => 'scalar'])->insist(1234);
+        $in->setSchema(['internalType' => 'numeric'])->insist(1234);
+        $in->setSchema(['internalType' => ['string', 'integer']])->insist(1234);
     }
 
     public function testFloat()
     {
-        $insistence = new Insistence(12.34);
-        $insistence->isType('float')->isType('scalar')->isType(['numeric', 'string']);
-        $insistence->bySchema(['type' => 'number', 'min' => 10, 'max' => 13]);
+        $in = new Insistence();
+        $in->setSchema(['internalType' => 'float'])->insist(12.34);
+        $in->setSchema(['internalType' => 'scalar'])->insist(12.34);
+        $in->setSchema(['internalType' => 'numeric'])->insist(12.34);
+        $in->setSchema(['internalType' => ['string', 'float']])->insist(12.34);
     }
 
     public function testString()
     {
-        $insistence = new Insistence('A string');
-        $insistence->isType('string')->isType('scalar')->isType(['numeric', 'string']);
-        $insistence->bySchema(['type' => 'string', 'minLength' => 8, 'pattern' => '[A-Za-z ]']);
+        $in = new Insistence();
+        $in->setSchema(['internalType' => 'string'])->insist('A string');
+        $in->setSchema(['internalType' => 'scalar'])->insist('A string');
+        $in->setSchema(['internalType' => ['string', 'float']])->insist('A string');
     }
 
     public function testArray()
     {
-        $insistence = new Insistence([1, 2, 3]);
-        $insistence->isType('array')->isType(['array', 'string']);
-        $insistence->bySchema(['type' => 'array']);
+        $in = new Insistence();
+        $in->setSchema(['internalType' => 'array'])->insist([1, 2, 3]);
+        $in->setSchema(['internalType' => 'array'])->insist(["a" => "b", "x" => "y"]);
+        $in->setSchema(['internalType' => ['string', 'array']])->insist([1, 2, 3]);
     }
 
     public function testObject()
     {
-        $insistence = new Insistence(new \stdClass);
-        $insistence->isType('object')->isType(['object', 'string']);
-        $insistence->bySchema(['type' => 'object']);
+        $class = new \stdClass;
+        $in = new Insistence();
+        $in->setSchema(['internalType' => 'object'])->insist($class);
+        $in->setSchema(['internalType' => ['string', 'object']])->insist($class);
+        $in->setSchema(['instanceOf' => 'stdClass'])->insist($class);
+        $in->setSchema(['instanceOf' => ['InvalidClass', 'stdClass']])->insist($class);
     }
 
     public function testNull()
     {
-        $insistence = new Insistence(null);
-        $insistence->isType('null')->isType(['null', 'string']);
-        $insistence->bySchema(['type' => 'null']);
+        $in = new Insistence();
+        $in->setSchema(['internalType' => 'null'])->insist(null);
+        $in->setSchema(['internalType' => ['string', 'null']])->insist(null);
     }
 
 
     public function testResource()
     {
-        $insistence = new Insistence(tmpfile());
-        $insistence->isType('resource')->isType(['resource', 'string']);
+        $res = tmpfile();
+        $in = new Insistence();
+        $in->setSchema(['internalType' => 'resource'])->insist($res);
+        $in->setSchema(['internalType' => ['resource', 'string']])->insist($res);
     }
 
 
     public function testCallable()
     {
         $callable = 'time';
-        $insistence = new Insistence($callable);
-        $insistence->isType('callable')->isType(['callable', 'string']);
+        $in = new Insistence();
+        $in->setSchema(['internalType' => 'callable'])->insist($callable);
+        $in->setSchema(['internalType' => ['callable', 'string']])->insist($callable);
     }
 
     /**
      * @expectedException InvalidArgumentException
-     * @expectedExceptionMessage Expected string but got boolean
+     * @expectedExceptionMessage NULL value found, but string is required
      */
-    public function testFailedType()
+    public function testFailedInternalType()
     {
-        $insistence = new Insistence(true);
-        $insistence->isType('string');
+        $in = new Insistence();
+        $in->setSchema(['internalType' => 'string'])->insist(null);
     }
 
     /**
      * @expectedException InvalidArgumentException
-     * @expectedExceptionMessage Expected ["string","object"] but got boolean
+     * @expectedExceptionMessage boolean value found, but string or object is required
      */
-    public function testFailedMultiType()
+    public function testFailedMultiInternalType()
     {
-        $insistence = new Insistence(true);
-        $insistence->isType(['string', 'object']);
+        $in = new Insistence();
+        $in->setSchema(['internalType' => ['string', 'object']])->insist(true);
     }
 
     /**
      * @expectedException InvalidArgumentException
-     * @expectedExceptionMessage Boolean value found, but a null is required
+     * @expectedExceptionMessage failure is not a valid PHP internal type
      */
-    public function testFailedSchema()
+    public function testInvalidInternalType()
     {
-        $insistence = new Insistence(true);
-        $insistence->bySchema(['type' => 'null']);
+        $in = new Insistence();
+        $in->setSchema(['internalType' => 'failure'])->insist(true);
+    }
+
+    /**
+     * @expectedException InvalidArgumentException
+     * @expectedExceptionMessage stdClass required to be an instance of InvalidClass
+     */
+    public function testFailedInstanceOf()
+    {
+        $in = new Insistence();
+        $in->setSchema(['instanceOf' => 'InvalidClass'])->insist(new \stdClass);
+    }
+
+    /**
+     * @expectedException InvalidArgumentException
+     * @expectedExceptionMessage instanceOf constraint used on a non-object
+     */
+    public function testInvalidInstanceOf()
+    {
+        $in = new Insistence();
+        $in->setSchema(['instanceOf' => 'stdClass'])->insist(true);
     }
 }

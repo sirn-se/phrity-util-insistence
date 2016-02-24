@@ -84,6 +84,15 @@ class InsistenceTest extends \PHPUnit_Framework_TestCase
         $in->setSchema(['internalType' => ['callable', 'string']])->insist($callable);
     }
 
+    public function testArrayAccessObject()
+    {
+        $ao = new \ArrayObject([1, 2]);
+        $in = new Insistence();
+        $in->setSchema(['type' => 'array'])->insist($ao);
+        $in->setSchema(['internalType' => 'array-access'])->insist($ao);
+        $in->setSchema(['internalType' => 'array-access-indexed'])->insist($ao);
+    }
+
     /**
      * @expectedException InvalidArgumentException
      * @expectedExceptionMessage NULL value found, but string is required
@@ -124,13 +133,65 @@ class InsistenceTest extends \PHPUnit_Framework_TestCase
         $in->setSchema(['instanceOf' => 'InvalidClass'])->insist(new \stdClass);
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     * @expectedExceptionMessage instanceOf constraint used on a non-object
-     */
-    public function testInvalidInstanceOf()
+    public function testIndexedArray()
     {
         $in = new Insistence();
-        $in->setSchema(['instanceOf' => 'stdClass'])->insist(true);
+        $in->setSchema(['internalType' => 'array-indexed'])->insist([1, 2, 3]);
+    }
+
+    /**
+     * @expectedException InvalidArgumentException
+     * @expectedExceptionMessage array value found, but array-indexed is required
+     */
+    public function testFailedIndexedAssociativeArray()
+    {
+        $in = new Insistence();
+        $in->setSchema(['internalType' => 'array-indexed'])->insist(['a' => 'A', 'b' => 'B']);
+    }
+
+    /**
+     * @expectedException InvalidArgumentException
+     * @expectedExceptionMessage array value found, but array-indexed is required
+     */
+    public function testFailedIndexedMixedArray()
+    {
+        $in = new Insistence();
+        $in->setSchema(['internalType' => 'array-indexed'])->insist([1, 'b' => 'B']);
+    }
+
+    /**
+     * @expectedException InvalidArgumentException
+     * @expectedExceptionMessage array value found, but array-indexed is required
+     */
+    public function testFailedIndexedNonsequentialArray()
+    {
+        $in = new Insistence();
+        $in->setSchema(['internalType' => 'array-indexed'])->insist([1 => 10, 20 => 200]);
+    }
+
+    public function testAssoiativeArray()
+    {
+        $in = new Insistence();
+        $in->setSchema(['internalType' => 'array-associative'])->insist(['a' => 'A', 'b' => 'B']);
+    }
+
+    /**
+     * @expectedException InvalidArgumentException
+     * @expectedExceptionMessage array value found, but array-associative is required
+     */
+    public function testFailedAssoiativeIndexedArray()
+    {
+        $in = new Insistence();
+        $in->setSchema(['internalType' => 'array-associative'])->insist([1, 2, 3]);
+    }
+
+    /**
+     * @expectedException InvalidArgumentException
+     * @expectedExceptionMessage array value found, but array-associative is required
+     */
+    public function testFailedAssoiativeMixedArray()
+    {
+        $in = new Insistence();
+        $in->setSchema(['internalType' => 'array-associative'])->insist([1, 'b' => 'B']);
     }
 }

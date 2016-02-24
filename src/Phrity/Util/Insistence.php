@@ -13,6 +13,7 @@ class Insistence
         $this->validator = new \JsonSchema\Validator();
         $factory = $this->validator->getFactory();
         $factory->setConstraintClass('undefined', 'Phrity\Util\Constraints\PhpConstraint');
+        $factory->setConstraintClass('type', 'Phrity\Util\Constraints\TypeConstraint');
     }
 
     public function setSchema($schema)

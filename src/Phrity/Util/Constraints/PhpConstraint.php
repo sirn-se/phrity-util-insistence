@@ -33,6 +33,16 @@ class PhpConstraint extends UndefinedConstraint
         $this->addError($path, "{$got} value found, but {$expected} is required", 'internalType');
     }
 
+    public function validateTypes($value, $schema = null, $path = null, $i = null)
+    {
+        // check array
+        if (is_array($value) || $value instanceof \ArrayAccess) {
+            $this->checkArray($value, $schema, $path, $i);
+        }
+
+        parent::validateTypes($value, $schema = null, $path = null, $i = null);
+    }
+
     private function hasInternalType($types, $value)
     {
         if (is_array($types)) {
@@ -43,7 +53,8 @@ class PhpConstraint extends UndefinedConstraint
             }
             return false;
         }
-        switch (strtolower($types)) {
+        $subtypes = explode('-', $types);
+        switch (array_shift($subtypes)) {
             case 'boolean':
                 return is_bool($value);
             case 'integer':
@@ -53,7 +64,18 @@ class PhpConstraint extends UndefinedConstraint
             case 'string':
                 return is_string($value);
             case 'array':
-                return is_array($value);
+                $result = is_array($value);
+                if (in_array('access', $subtypes)) {
+                    $result = $result || $value instanceof \ArrayAccess;
+                    $value = (array) $value;
+                }
+                if (in_array('indexed', $subtypes)) {
+                    $result = $result && $this->isIndexedArray($value);
+                }
+                if (in_array('associative', $subtypes)) {
+                    $result = $result && $this->isAssociativeArray($value);
+                }
+                return $result;
             case 'object':
                 return is_object($value);
             case 'resource':
@@ -74,8 +96,9 @@ class PhpConstraint extends UndefinedConstraint
     private function checkInstanceOf($value, $schema = null)
     {
         if (!is_object($value)) {
-            throw new InvalidArgumentException("instanceOf constraint used on a non-object");
+            return;
         }
+
         $types = $schema->instanceOf;
         if ($this->hasInstanceOf($types, $value)) {
             return;
@@ -97,5 +120,20 @@ class PhpConstraint extends UndefinedConstraint
             return false;
         }
         return $value instanceof $types;
+    }
+
+    private function isIndexedArray(array $value)
+    {
+        return array_values($value) === $value;
+    }
+
+    private function isAssociativeArray(array $value)
+    {
+        foreach (array_keys($value) as $key) {
+            if (!is_string($key)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

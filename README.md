@@ -26,8 +26,23 @@ The following internalTypes is available, their usage should be
 * callable
 * scalar
 
+Some types support subtyping as well. One or more subtypes may be added after the main type.
+
+* array-access — Accepts ArrayAccess as well as standard arrays
+* array-indexed — Requires that the array only uses sequential, integer keys starting with 0
+* array-associative — Requires that the array only uses strings for keys
+
 The internalType constraint accepts either a string, or an array of strings where at least one
 must match to succeed the constraint.
+
+Examples;
+
+```php
+$insistence = new Insistence(['internalType' => 'string']);
+$insistence = new Insistence(['internalType' => 'array-associative']);
+$insistence = new Insistence(['internalType' => 'array-access-indexed']);
+$insistence = new Insistence(['internalType' => ['object', 'null']]);
+```
 
 ## instanceOf
 
@@ -41,7 +56,7 @@ It may only be used on data of PHP type "object".
 ```php
 $insistence = new Insistence(['internalType' => 'float', 'min' => 1.0, 'max' => 9.9]);
 $insistence->insist(4.45); // Will pass
-$insistence->insist(123); // Will fail, higher then max 9.9
+$insistence->insist(123.45); // Will fail, higher then max 9.9
 $insistence->insist("Hello"); // Will fail, not a float
 ```
 
